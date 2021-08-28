@@ -1,8 +1,12 @@
-package main
+package datespec
 
 import (
 	"time"
 )
+
+type DateSpec interface {
+	OccursOn(*Date) bool
+}
 
 // DailyDateSpec takes place every day.
 type DailyDateSpec struct{}
