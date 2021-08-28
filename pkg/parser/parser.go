@@ -1,7 +1,7 @@
 package parser
 
 import (
-	"alltom/tomcalendar/pkg/datespec"
+	"github.com/alltom/tomcalendar/pkg/datespec"
 	"bufio"
 	"fmt"
 	"io"

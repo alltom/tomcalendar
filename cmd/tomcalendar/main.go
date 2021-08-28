@@ -1,8 +1,8 @@
 package main
 
 import (
-	"alltom/tomcalendar/pkg/datespec"
-	"alltom/tomcalendar/pkg/parser"
+	"github.com/alltom/tomcalendar/pkg/datespec"
+	"github.com/alltom/tomcalendar/pkg/parser"
 	"flag"
 	"fmt"
 	"io"
