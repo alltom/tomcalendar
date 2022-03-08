@@ -1,11 +1,13 @@
 package datespec
 
 import (
+	"encoding/json"
 	"time"
 )
 
 type DateSpec interface {
 	OccursOn(*Date) bool
+	MarshalJSON() ([]byte, error)
 }
 
 // DailyDateSpec takes place every day.
@@ -65,20 +67,54 @@ func (s *UnionDateSpec) OccursOn(date *Date) bool {
 	return false
 }
 
+func (s *UnionDateSpec) MarshalJSON() ([]byte, error) {
+	return json.Marshal(map[string]interface{}{
+		"type":  "union",
+		"specs": s.Specs,
+	})
+}
+
 func (s *DailyDateSpec) OccursOn(date *Date) bool {
 	return true
+}
+
+func (s *DailyDateSpec) MarshalJSON() ([]byte, error) {
+	return json.Marshal(map[string]interface{}{"type": "daily"})
 }
 
 func (s *EveryNthDayDateSpec) OccursOn(date *Date) bool {
 	return daysSinceEpoch(date)%s.Count == 0
 }
 
+func (s *EveryNthDayDateSpec) MarshalJSON() ([]byte, error) {
+	return json.Marshal(map[string]interface{}{
+		"type":     "everyNth",
+		"spec":     map[string]interface{}{"type": "daily"},
+		"baseDate": map[string]interface{}{"year": 1970, "month": 1, "day": 1},
+		"n":        s.Count,
+	})
+}
+
 func (s *WeekdayDateSpec) OccursOn(date *Date) bool {
 	return date.LocalStartOfDay().Weekday() == s.Weekday
 }
 
+func (s *WeekdayDateSpec) MarshalJSON() ([]byte, error) {
+	// In Go, Sunday is 0. In Swift, Sunday is 1.
+	return json.Marshal(map[string]interface{}{"type": "dayOfWeek", "weekday": s.Weekday + 1})
+}
+
 func (s *EveryNthWeekdayDateSpec) OccursOn(date *Date) bool {
 	return date.LocalStartOfDay().Weekday() == s.Weekday && (daysSinceEpoch(date)/7)%s.Count == 0
+}
+
+func (s *EveryNthWeekdayDateSpec) MarshalJSON() ([]byte, error) {
+	return json.Marshal(map[string]interface{}{
+		"type":     "everyNth",
+		"spec":     map[string]interface{}{"type": "dayOfWeek", "weekday": s.Weekday + 1},
+		"baseDate": map[string]interface{}{"year": 1970, "month": 1, "day": 1},
+		"n":        s.Count,
+	})
 }
 
 func (s *DayOfMonthDateSpec) OccursOn(date *Date) bool {
@@ -88,12 +124,27 @@ func (s *DayOfMonthDateSpec) OccursOn(date *Date) bool {
 	return s.Day == date.Day
 }
 
+func (s *DayOfMonthDateSpec) MarshalJSON() ([]byte, error) {
+	return json.Marshal(map[string]interface{}{"type": "dayOfMonth", "day": s.Day})
+}
+
 func (s *YearlyDateSpec) OccursOn(date *Date) bool {
 	return s.Month == date.Month && s.Day == date.Day
 }
 
+func (s *YearlyDateSpec) MarshalJSON() ([]byte, error) {
+	return json.Marshal(map[string]interface{}{"type": "dayOfYear", "month": s.Month, "day": s.Day})
+}
+
 func (s *SingleDayDateSpec) OccursOn(date *Date) bool {
 	return s.Year == date.Year && s.Month == date.Month && s.Day == date.Day
+}
+
+func (s *SingleDayDateSpec) MarshalJSON() ([]byte, error) {
+	return json.Marshal(map[string]interface{}{
+		"type": "singleDay",
+		"date": map[string]interface{}{"year": s.Year, "month": s.Month, "day": s.Day},
+	})
 }
 
 func (d *Date) LocalStartOfDay() time.Time {

@@ -1,9 +1,10 @@
 package parser
 
 import (
-	"github.com/alltom/tomcalendar/pkg/datespec"
 	"bufio"
+	"encoding/json"
 	"fmt"
+	"github.com/alltom/tomcalendar/pkg/datespec"
 	"io"
 	"regexp"
 	"strconv"
@@ -14,6 +15,13 @@ import (
 type Entry struct {
 	Title    string
 	DateSpec datespec.DateSpec
+}
+
+func (s *Entry) MarshalJSON() ([]byte, error) {
+	return json.Marshal(map[string]interface{}{
+		"text": s.Title,
+		"spec": s.DateSpec,
+	})
 }
 
 var (
